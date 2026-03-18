@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satisfacción de Obra - El Camino a Casa</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Estilos Globales y Animaciones */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        @keyframes float-fast {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(-10deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+        }
+        @keyframes fadeInUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
+        .animate-bounceIn { animation: bounceIn 0.6s ease-out forwards; }
+        
+        .emoji-3d {
+            text-shadow: 
+                0px 2px 0px #b0b0b0,
+                0px 4px 0px #999,
+                0px 6px 0px #808080,
+                0px 8px 10px rgba(0,0,0,0.3);
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .emoji-3d:hover {
+            transform: scale(1.1) translateY(-5px);
+        }
+        .btn-3d {
+            position: relative;
+            transition: all 0.1s ease;
+            box-shadow: 0 8px 0px var(--btn-shadow-color, #c2410c), 0 15px 20px rgba(0,0,0,0.3);
+            transform: translateY(-8px);
+        }
+        .btn-3d:active {
+            box-shadow: 0 0px 0px var(--btn-shadow-color, #c2410c), 0 5px 5px rgba(0,0,0,0.3);
+            transform: translateY(0px);
+        }
+        .btn-3d:disabled {
+            box-shadow: 0 0px 0px var(--btn-shadow-color, #c2410c), 0 5px 5px rgba(0,0,0,0.3);
+            transform: translateY(0px);
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .card-3d {
+            box-shadow: 
+                -10px -10px 30px rgba(255,255,255,0.5),
+                10px 10px 30px rgba(0,0,0,0.2),
+                inset 2px 2px 5px rgba(255,255,255,0.5);
+            backdrop-filter: blur(15px);
+        }
+        .wheel-3d-edge {
+            box-shadow: 
+                inset 0 10px 20px rgba(255,255,255,0.5),
+                inset 0 -15px 30px rgba(0,0,0,0.4),
+                0 20px 40px rgba(0,0,0,0.5);
+        }
+        .sphere-bg {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 0;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 selection:bg-orange-300 relative overflow-x-hidden min-h-screen transition-colors duration-1000" id="main-container">
+
+    <!-- Esferas de Fondo -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0" id="bg-shapes">
+        <div class="sphere-bg w-96 h-96 -top-20 -left-20 animate-[float-slow_8s_ease-in-out_infinite]" id="shape1" style="background: radial-gradient(circle, #fcd34d, transparent)"></div>
+        <div class="sphere-bg w-[500px] h-[500px] bottom-0 -right-40 animate-[float-fast_12s_ease-in-out_infinite]" id="shape2" style="background: radial-gradient(circle, #fb923c, transparent)"></div>
+        <div class="sphere-bg w-64 h-64 top-1/2 left-1/4 animate-[float-slow_10s_ease-in-out_infinite]" id="shape3" style="background: radial-gradient(circle, #f43f5e, transparent)"></div>
+    </div>
+
+    <!-- Barra de Progreso -->
+    <div class="fixed top-0 left-0 w-full z-50 flex justify-center pt-6 px-4 pointer-events-none">
+        <div class="bg-white/80 backdrop-blur-md px-6 py-3 rounded-full flex gap-4 sm:gap-8 shadow-lg items-center text-sm sm:text-base font-bold text-gray-400">
+            <div id="pb-step1" class="flex items-center gap-2 transition-colors duration-500 text-amber-600">
+                <div class="w-6 h-6 rounded-full flex items-center justify-center text-white bg-amber-500">1</div>
+                <span class="hidden sm:inline">Reflexión</span>
+            </div>
+            <div id="pb-line1" class="h-1 w-8 sm:w-16 rounded-full transition-colors duration-500 bg-gray-200"></div>
+            <div id="pb-step2" class="flex items-center gap-2 transition-colors duration-500">
+                <div id="pb-dot2" class="w-6 h-6 rounded-full flex items-center justify-center text-white bg-gray-300">2</div>
+                <span class="hidden sm:inline">Acción</span>
+            </div>
+            <div id="pb-line2" class="h-1 w-8 sm:w-16 rounded-full transition-colors duration-500 bg-gray-200"></div>
+            <div id="pb-step3" class="flex items-center gap-2 transition-colors duration-500">
+                <div id="pb-dot3" class="w-6 h-6 rounded-full flex items-center justify-center text-white bg-gray-300">3</div>
+                <span class="hidden sm:inline">Celebración</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASO 1: EL POEMA -->
+    <div id="step1" class="relative flex flex-col items-center justify-center p-4 sm:p-12 overflow-hidden py-24 z-10">
+        <div class="z-10 max-w-5xl w-full">
+            <!-- Encabezado -->
+            <div class="text-center mb-16 opacity-0 animate-fadeInUp">
+                <div class="inline-flex justify-center items-center bg-white/70 p-5 rounded-full shadow-[0_10px_20px_rgba(234,88,12,0.15)] mb-6 border border-white/80 animate-bounce hover:scale-110 transition-transform">
+                    <i data-lucide="quote" class="w-10 h-10 text-orange-500 fill-orange-100"></i>
+                </div>
+                <h1 class="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-rose-600 mb-6 font-serif drop-shadow-sm tracking-tight">
+                    El Camino a Casa
+                </h1>
+                <p class="text-lg sm:text-xl text-gray-700 font-medium max-w-2xl mx-auto leading-relaxed bg-white/40 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/50">
+                    Una reflexión guiada sobre la misericordia, el perdón y el regreso definitivo al abrazo del Padre.
+                </p>
+            </div>
+
+            <!-- Línea de Tiempo Generada por JS -->
+            <div class="relative w-full overflow-hidden p-2 sm:p-10 h-full">
+                <div class="absolute border-opacity-40 border-orange-400 h-full border-l-4 left-10 sm:left-1/2 transform sm:-translate-x-1/2 top-0 rounded-full"></div>
+                <div id="timeline-container"></div>
+            </div>
+
+            <!-- Botón Siguiente -->
+            <div class="flex justify-center mt-16 opacity-0 animate-fadeInUp" style="animation-delay: 2.6s">
+                <button onclick="goToStep(2)" style="--btn-shadow-color: #b45309" class="btn-3d bg-gradient-to-b from-amber-400 to-orange-600 text-white font-extrabold text-2xl py-5 px-12 rounded-full flex items-center gap-4 hover:brightness-110 group shadow-[0_15px_30px_rgba(234,88,12,0.3)]">
+                    Iniciar mi Restauración 
+                    <i data-lucide="chevron-right" class="w-8 h-8 group-hover:translate-x-2 transition-transform duration-300"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASO 2: LA RULETA (Oculto inicialmente) -->
+    <div id="step2" class="hidden relative flex flex-col items-center justify-center p-6 overflow-hidden pt-24 z-10 min-h-screen">
+        <div class="z-10 text-center mb-10 mt-8">
+            <h2 class="text-4xl sm:text-5xl font-black text-teal-900 mb-4 drop-shadow-md">Ruleta de la Misericordia</h2>
+            <p class="text-teal-700 text-xl max-w-2xl mx-auto font-medium">
+                El amor se demuestra en obras. Gira la ruleta y recibe tu misión 3D para restaurar la casa hoy.
+            </p>
+        </div>
+
+        <div class="relative z-10 w-80 h-80 sm:w-[450px] sm:h-[450px] mb-12">
+            <!-- Puntero -->
+            <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 z-30 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                <div class="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-rose-600 relative">
+                    <div class="absolute -top-[40px] -left-[10px] w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[35px] border-t-rose-400 opacity-60"></div>
+                </div>
+            </div>
+
+            <!-- Sombra Inferior -->
+            <div class="absolute inset-2 rounded-full bg-black/20 translate-y-6 blur-md z-0"></div>
+
+            <!-- Ruleta CSS -->
+            <div id="wheel" class="w-full h-full rounded-full border-[12px] border-white wheel-3d-edge overflow-hidden relative z-10 bg-white" style="transition: transform 4.5s cubic-bezier(0.15, 0.9, 0.25, 1);">
+                <div id="wheel-bg" class="absolute inset-0"></div>
+                <div id="wheel-items" class="absolute inset-0"></div>
+            </div>
+
+            <!-- Centro de Ruleta -->
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-b from-white to-gray-200 rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.5),inset_0_5px_10px_rgba(255,255,255,0.8)] flex items-center justify-center border-4 border-gray-100 z-20">
+                <i data-lucide="heart" class="text-rose-500 w-10 h-10 sm:w-14 sm:h-14 fill-rose-500 animate-[pulse-glow_2s_infinite] drop-shadow-md"></i>
+            </div>
+        </div>
+
+        <div class="z-10 w-full max-w-xl px-4 min-h-[250px] flex flex-col items-center justify-start">
+            <button id="spin-btn" onclick="spinWheel()" style="--btn-shadow-color: #0f766e" class="btn-3d bg-gradient-to-b from-teal-400 to-teal-600 text-white font-black text-2xl py-5 px-16 rounded-full flex items-center gap-4 hover:brightness-110 mt-10">
+                <i data-lucide="rotate-cw" id="spin-icon" class="w-8 h-8"></i>
+                <span id="spin-text">GIRAR RULETA</span>
+            </button>
+
+            <!-- Resultado Ruleta -->
+            <div id="result-card" class="hidden w-full bg-white/90 backdrop-blur-xl rounded-[2rem] p-8 sm:p-10 card-3d border-b-8 relative mt-6">
+                <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest py-2 px-6 rounded-full shadow-lg">
+                    Tu Misión Asignada
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-6 mt-4">
+                    <div id="res-emoji" class="text-7xl sm:text-8xl emoji-3d shrink-0 animate-bounce"></div>
+                    <div class="text-center sm:text-left">
+                        <h3 id="res-title" class="text-2xl sm:text-3xl font-black text-gray-800 mb-3"></h3>
+                        <p id="res-desc" class="text-gray-600 font-medium leading-relaxed"></p>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <button onclick="goToStep(3)" style="--btn-shadow-color: #b45309" class="btn-3d w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-xl py-4 rounded-2xl flex items-center justify-center gap-3 hover:brightness-110">
+                        <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                        Me Comprometo a Cumplirla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASO 3: LA CELEBRACIÓN (Oculto inicialmente) -->
+    <div id="step3" class="hidden relative flex flex-col items-center justify-center p-6 pt-24 overflow-hidden min-h-screen">
+        
+        <div class="absolute inset-0 bg-cover bg-center opacity-15 blur-md transform scale-110" style="background-image: url('https://plus.unsplash.com/premium_photo-1733320819936-fd22d4770c05?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"></div>
+        <div class="absolute inset-0 bg-white/40"></div>
+        
+        <!-- Confeti Container -->
+        <div id="confetti-container" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+        <div class="z-10 w-full max-w-2xl bg-white rounded-[2.5rem] overflow-hidden card-3d border border-white/40 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" id="celebration-card">
+            <!-- Imagen Real -->
+            <div class="relative h-72 sm:h-96 w-full group">
+                <img src="https://plus.unsplash.com/premium_photo-1733320819936-fd22d4770c05?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Abrazo Padre e Hijo" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent flex flex-col justify-end p-8 sm:p-10">
+                    <h2 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white font-serif tracking-wide drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">Bienvenido a Casa</h2>
+                    <p class="text-amber-300 text-lg sm:text-xl md:text-2xl italic mt-3 drop-shadow-md font-medium">La restitución de la dignidad y la vida nueva.</p>
+                </div>
+            </div>
+            
+            <div class="p-8 sm:p-10 bg-gradient-to-b from-orange-50 to-white text-center relative">
+                <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-amber-200 to-amber-500 rounded-full p-2 shadow-[0_10px_20px_rgba(0,0,0,0.3)]">
+                    <div class="bg-white rounded-full p-4 border-4 border-amber-100">
+                        <i data-lucide="sparkles" class="text-amber-500 w-8 h-8"></i>
+                    </div>
+                </div>
+
+                <p class="text-gray-500 uppercase font-black tracking-widest text-sm mb-4 mt-6">Estado de Gracia: Restaurado</p>
+                
+                <div class="mb-8 px-2 sm:px-6">
+                    <p class="text-gray-700 text-base sm:text-lg leading-relaxed font-medium">
+                        Como al salir del <span class="text-orange-600 font-bold">Sacramento de la Reconciliación</span>, el Padre te envuelve hoy con un abrazo de amor eterno. 
+                        Deja que Su infinita gracia y misericordia sanen tu corazón, te sostengan en el camino y te impulsen a ser cada día una mejor persona.
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-inner border border-gray-100 mb-8">
+                    <p class="text-gray-400 font-bold text-xs uppercase mb-2">Tu compromiso de hoy:</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-gray-800 flex justify-center items-center gap-3">
+                        <span id="final-emoji" class="text-4xl emoji-3d"></span> <span id="final-title"></span>
+                    </h3>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="downloadCard()" style="--btn-shadow-color: #111827" class="btn-3d flex-1 bg-gray-900 text-white font-bold text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-800">
+                        <i data-lucide="download" class="w-6 h-6"></i>
+                        Descargar Recordatorio
+                    </button>
+                    <button onclick="resetApp()" class="flex-1 bg-transparent border-2 border-gray-200 text-gray-600 font-bold text-lg py-4 rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                        Volver al inicio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de la Aplicación -->
+    <script>
+        // --- DATOS ---
+        const FASES_POEMA = [
+            {
+                title: "La Lejanía", icon: "moon", color: "indigo",
+                lines: ["He caminado lejos, buscando en las sombras lo que siempre tuve en la luz.", "He gastado el tiempo, los dones, la gracia, creyendo que la libertad era huir."]
+            },
+            {
+                title: "El Eco", icon: "footprints", color: "amber",
+                lines: ["Pero en el fondo de mi intemperie, resuena tu eco, terco y cálido.", "Me levanto. Dejo atrás el barro y mis manos vacías de excusas."]
+            },
+            {
+                title: "El Regreso", icon: "sun", color: "rose",
+                lines: ["Ensayo palabras de perdón, un discurso roto que sé que interrumpirás con un abrazo.", "Señor, haz de mi regreso una obra viva.", "Que mi vida nueva sea restaurar la casa, vendar al herido, amar al hermano.", "Vuelvo a ti. Vuelvo a casa."]
+            }
+        ];
+
+        const OBRAS_MISERICORDIA = [
+            { id: 0, text: "Dar comida a quien necesita", emoji: "🍲", color: "#FF6B6B", description: "Prepara una porción extra en tu comida de hoy o compra algo nutritivo para alguien en situación de calle. Un pequeño gesto nutre el cuerpo y el alma." }, 
+            { id: 1, text: "Donar ropa en buen estado", emoji: "👕", color: "#45B7D1", description: "Revisa tu clóset y separa esas prendas que están en buen estado pero ya no usas. Alguien más podrá abrigarse gracias a tu generosidad." }, 
+            { id: 2, text: "Visitar a un enfermo", emoji: "🩺", color: "#6C5CE7", description: "Dedica un tiempo para visitar, llamar o escribirle a alguien que esté lidiando con problemas de salud. Tu compañía es la mejor medicina." }, 
+            { id: 3, text: "Ayudar a un adulto mayor", emoji: "👵", color: "#20B2AA", description: "Ofrécete para hacer sus compras, ayúdale a cruzar la calle o simplemente siéntate a escuchar sus historias con atención y cariño." }, 
+            { id: 4, text: "Pagar un café o pasaje", emoji: "☕", color: "#FFD700", description: "Sorprende a la persona detrás de ti en la fila pagando su café o el pasaje del transporte. Una pequeña alegría anónima cambia el día de cualquiera." }, 
+            { id: 5, text: "Cuidar la naturaleza", emoji: "🌱", color: "#87CEFA", description: "Recoge basura en tu camino, planta una semilla o reduce tu consumo de agua y energía hoy. Cuida activamente la 'Casa Común' que Dios nos dio." }, 
+            { id: 6, text: "Ayudar con la limpieza", emoji: "🧹", color: "#BA55D3", description: "Toma la iniciativa en tu hogar o trabajo. Lava los platos, barre o limpia un espacio común sin que nadie te lo pida. El servicio humilde santifica." }, 
+            { id: 7, text: "Donar medicinas o sangre", emoji: "🩸", color: "#00CED1", description: "Revisa tu botiquín y dona medicamentos no vencidos a un dispensario, o acércate a donar sangre. Estás compartiendo vida literalmente." }, 
+            { id: 8, text: "Acoger al nuevo o extranjero", emoji: "🤝", color: "#1E90FF", description: "Haz sentir bienvenida a esa persona que acaba de llegar a tu comunidad, trabajo o escuela. Bríndale tu orientación y una sonrisa sincera." }, 
+            { id: 9, text: "Compartir lo que sabes", emoji: "📚", color: "#3CB371", description: "Dedica tiempo a enseñar a alguien una habilidad que dominas o ayúdale a entender algo que le cuesta. El conocimiento es un don para compartir." }, 
+            { id: 10, text: "Ceder el asiento o turno", emoji: "🪑", color: "#8A2BE2", description: "Renuncia a tu comodidad por alguien más. Cede tu asiento en el transporte o tu lugar en la fila a alguien que lo necesite más que tú." }, 
+            { id: 11, text: "Sonreír a un desconocido", emoji: "😊", color: "#FF6347", description: "Regala una sonrisa sincera a las personas con las que te cruzas hoy. Tu alegría puede ser el único rayo de luz en el día de alguien." }, 
+            { id: 12, text: "Enseñar algo útil", emoji: "💡", color: "#4ECDC4", description: "Tómate el tiempo de explicarle a alguien cómo hacer algo que le facilitará la vida. La instrucción paciente es una obra de amor profundo." }, 
+            { id: 13, text: "Dar un buen consejo", emoji: "🗣️", color: "#FDCB6E", description: "Si alguien te pide ayuda, escúchalo bien antes de hablar. Ofrécele palabras de sabiduría guiadas por el amor y la verdad, sin imponer nada." }, 
+            { id: 14, text: "Perdonar una ofensa", emoji: "🕊️", color: "#FFA07A", description: "Deja ir el resentimiento hacia esa persona que te lastimó. El perdón te libera a ti y le da una oportunidad de redención y paz al otro." }, 
+            { id: 15, text: "Escuchar sin juzgar", emoji: "👂", color: "#9370DB", description: "Préstale toda tu atención a quien necesita desahogarse. No interrumpas, no critiques, solo acompáñalo en su dolor o preocupación." }, 
+            { id: 16, text: "Consolar al triste", emoji: "🫂", color: "#FF69B4", description: "Acércate a quien está pasando por un momento difícil. A veces no hacen falta palabras; un abrazo o simplemente tu presencia es suficiente." }, 
+            { id: 17, text: "Tener mucha paciencia hoy", emoji: "🧘", color: "#32CD32", description: "Decide no enojarte ante los contratiempos, el tráfico o las actitudes difíciles de otros. Respira profundo y responde con mansedumbre." }, 
+            { id: 18, text: "Rezar por alguien difícil", emoji: "🙏", color: "#FF8C00", description: "Eleva una oración sincera por esa persona con la que te cuesta relacionarte. Pide bendiciones para ella y que tu corazón se llene de paz." }, 
+            { id: 19, text: "Ayunar de quejas y críticas", emoji: "🤐", color: "#FF4500", description: "Haz el propósito consciente de no quejarte ni hablar mal de nadie durante todo el día. Transforma cada queja en un motivo de gratitud." }, 
+            { id: 20, text: "Detener un chisme", emoji: "🛑", color: "#DA70D6", description: "Si llega a ti un comentario destructivo sobre otra persona, no lo compartas ni le des alas. Sé el muro compasivo donde muere la difamación." }, 
+            { id: 21, text: "Mensaje de ánimo", emoji: "💌", color: "#FF1493", description: "Escríbele a alguien que no ves hace tiempo o que sabes que está luchando. Dile cuánto lo aprecias y que estás orando por su bienestar." }, 
+            { id: 22, text: "Leer el Evangelio de hoy", emoji: "📖", color: "#00FA9A", description: "Toma 5 minutos para leer la lectura del día. Deja que la Palabra ilumine tus acciones y te dé las fuerzas necesarias para continuar tu camino." }, 
+            { id: 23, text: "Rezar por los difuntos", emoji: "🕯️", color: "#4682B4", description: "Recuerda con cariño a aquellos que ya partieron y ofrece un Padre Nuestro, un denario o una oración sincera por el descanso de sus almas." }
+        ];
+
+        // --- ESTADO Y VARIABLES GLOBALES ---
+        let selectedObra = null;
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        // --- INICIALIZACIÓN DEL DOM ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTimeline();
+            renderWheel();
+            lucide.createIcons();
+            updateBackgroundTheme(1);
+        });
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            FASES_POEMA.forEach((fase, index) => {
+                const isEven = index % 2 === 0;
+                const linesHTML = fase.lines.map(line => `<p class="pl-4 border-l-2 border-orange-200">${line}</p>`).join('');
+                const delay = index * 0.7 + 0.3;
+                
+                const html = `
+                <div class="mb-12 flex justify-between items-center w-full ${isEven ? 'sm:flex-row-reverse' : 'sm:flex-row'} flex-col sm:flex-row opacity-0 animate-fadeInUp group" style="animation-delay: ${delay}s">
+                    <div class="hidden sm:block w-5/12"></div>
+                    
+                    <div class="z-20 flex items-center justify-center bg-white shadow-[0_10px_20px_rgba(0,0,0,0.1),inset_0_-4px_6px_rgba(0,0,0,0.05)] w-16 h-16 rounded-full border-4 border-orange-100 absolute left-4 sm:relative sm:left-auto transform transition-transform duration-500 group-hover:scale-125 group-hover:border-orange-300 group-hover:rotate-12">
+                        <i data-lucide="${fase.icon}" class="w-6 h-6 text-${fase.color}-500"></i>
+                    </div>
+                    
+                    <div class="z-10 bg-white/85 backdrop-blur-xl rounded-[2rem] shadow-lg border border-white/60 w-full sm:w-5/12 p-6 sm:p-8 ml-20 sm:ml-0 transition-all duration-300 card-3d group-hover:scale-[1.03] group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_rgba(234,88,12,0.15)] relative overflow-hidden">
+                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-white to-transparent opacity-50 rounded-full blur-2xl"></div>
+                        <h3 class="font-extrabold text-orange-600 text-2xl mb-4 flex items-center gap-3 font-serif uppercase tracking-widest text-sm">
+                            ${fase.title}
+                        </h3>
+                        <div class="space-y-4 text-gray-700 font-medium text-lg leading-relaxed relative z-10">
+                            ${linesHTML}
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function renderWheel() {
+            const bgContainer = document.getElementById('wheel-bg');
+            const itemsContainer = document.getElementById('wheel-items');
+            
+            // Gradiente cónico
+            const slices = OBRAS_MISERICORDIA.map((obra, i) => {
+                const step = 360 / OBRAS_MISERICORDIA.length;
+                return `${obra.color} ${i * step}deg ${(i + 1) * step}deg`;
+            }).join(', ');
+            bgContainer.style.background = `conic-gradient(${slices})`;
+
+            // Emojis 3D
+            OBRAS_MISERICORDIA.forEach((obra, index) => {
+                const angle = index * (360 / OBRAS_MISERICORDIA.length);
+                const centerAngle = angle + (360/OBRAS_MISERICORDIA.length)/2;
+                
+                const el = document.createElement('div');
+                el.className = "absolute top-0 left-1/2 origin-bottom flex flex-col items-center pt-4 sm:pt-6";
+                el.style.width = '40px';
+                el.style.height = '50%';
+                el.style.transform = `translateX(-50%) rotate(${centerAngle}deg)`;
+                
+                el.innerHTML = `<span class="text-2xl sm:text-3xl emoji-3d" style="transform: rotate(180deg)">${obra.emoji}</span>`;
+                itemsContainer.appendChild(el);
+            });
+        }
+
+        // --- LÓGICA DE NAVEGACIÓN Y EFECTOS ---
+        function updateBackgroundTheme(step) {
+            const body = document.getElementById('main-container');
+            const shape1 = document.getElementById('shape1');
+            const shape2 = document.getElementById('shape2');
+            const shape3 = document.getElementById('shape3');
+
+            // Quitar todas las clases bg previas
+            body.className = body.className.replace(/bg-gradient-to-br from-[a-z0-9-]+ via-[a-z0-9-]+ to-[a-z0-9-]+/g, '');
+            body.className = body.className.replace(/bg-[a-z0-9-]+/g, '');
+
+            if(step === 1) {
+                body.classList.add('bg-gradient-to-br', 'from-amber-50', 'via-orange-100', 'to-rose-50');
+                shape1.style.background = 'radial-gradient(circle, #fcd34d, transparent)';
+                shape2.style.background = 'radial-gradient(circle, #fb923c, transparent)';
+                shape3.style.background = 'radial-gradient(circle, #f43f5e, transparent)';
+            } else if(step === 2) {
+                body.classList.add('bg-gradient-to-br', 'from-emerald-100', 'via-teal-50', 'to-cyan-100');
+                shape1.style.background = 'radial-gradient(circle, #a7f3d0, transparent)';
+                shape2.style.background = 'radial-gradient(circle, #14b8a6, transparent)';
+                shape3.style.background = 'radial-gradient(circle, #06b6d4, transparent)';
+            } else {
+                body.classList.add('bg-orange-50');
+            }
+        }
+
+        function updateProgressBar(step) {
+            const els = {
+                s1: document.getElementById('pb-step1'), l1: document.getElementById('pb-line1'),
+                s2: document.getElementById('pb-step2'), d2: document.getElementById('pb-dot2'), l2: document.getElementById('pb-line2'),
+                s3: document.getElementById('pb-step3'), d3: document.getElementById('pb-dot3')
+            };
+
+            // Reset
+            els.s2.classList.remove('text-emerald-600'); els.d2.className = "w-6 h-6 rounded-full flex items-center justify-center text-white bg-gray-300";
+            els.l1.classList.remove('bg-emerald-500'); els.l1.classList.add('bg-gray-200');
+            els.s3.classList.remove('text-rose-600'); els.d3.className = "w-6 h-6 rounded-full flex items-center justify-center text-white bg-gray-300";
+            els.l2.classList.remove('bg-rose-500'); els.l2.classList.add('bg-gray-200');
+
+            if (step >= 2) {
+                els.l1.classList.replace('bg-gray-200', 'bg-emerald-500');
+                els.s2.classList.add('text-emerald-600');
+                els.d2.className = "w-6 h-6 rounded-full flex items-center justify-center text-white bg-emerald-500";
+            }
+            if (step >= 3) {
+                els.l2.classList.replace('bg-gray-200', 'bg-rose-500');
+                els.s3.classList.add('text-rose-600');
+                els.d3.className = "w-6 h-6 rounded-full flex items-center justify-center text-white bg-rose-500";
+            }
+        }
+
+        function goToStep(step) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            
+            updateProgressBar(step);
+            updateBackgroundTheme(step);
+
+            if(step === 3) {
+                generateConfetti();
+                // Preparar datos finales
+                document.getElementById('final-emoji').innerText = selectedObra.emoji;
+                document.getElementById('final-title').innerText = selectedObra.text;
+                // Animar aparición
+                setTimeout(() => {
+                    const card = document.getElementById('celebration-card');
+                    card.classList.remove('opacity-0', 'translate-y-10');
+                    card.classList.add('opacity-100', 'translate-y-0');
+                }, 100);
+            }
+        }
+
+        function resetApp() {
+            const card = document.getElementById('celebration-card');
+            card.classList.add('opacity-0', 'translate-y-10');
+            card.classList.remove('opacity-100', 'translate-y-0');
+            
+            selectedObra = null;
+            document.getElementById('result-card').classList.add('hidden');
+            document.getElementById('spin-btn').classList.remove('hidden');
+            document.getElementById('confetti-container').innerHTML = '';
+            
+            setTimeout(() => goToStep(1), 300);
+        }
+
+        // --- LÓGICA DE LA RULETA ---
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            
+            const btn = document.getElementById('spin-btn');
+            btn.disabled = true;
+            document.getElementById('spin-text').innerText = 'GIRANDO...';
+            document.getElementById('spin-icon').classList.add('animate-spin');
+
+            const winnerIndex = Math.floor(Math.random() * OBRAS_MISERICORDIA.length);
+            const sliceAngle = 360 / OBRAS_MISERICORDIA.length;
+            const targetAngle = 360 - (winnerIndex * sliceAngle); 
+            const spins = 6 * 360; 
+            const currentBase = currentRotation - (currentRotation % 360);
+            currentRotation = currentBase + spins + targetAngle;
+
+            document.getElementById('wheel').style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                selectedObra = OBRAS_MISERICORDIA[winnerIndex];
+                
+                btn.classList.add('hidden');
+                btn.disabled = false;
+                document.getElementById('spin-text').innerText = 'GIRAR RULETA';
+                document.getElementById('spin-icon').classList.remove('animate-spin');
+
+                const resCard = document.getElementById('result-card');
+                resCard.style.borderColor = selectedObra.color;
+                document.getElementById('res-emoji').innerText = selectedObra.emoji;
+                document.getElementById('res-title').innerText = selectedObra.text;
+                document.getElementById('res-desc').innerText = selectedObra.description;
+                
+                resCard.classList.remove('hidden');
+                resCard.classList.add('animate-bounceIn');
+
+            }, 4500);
+        }
+
+        // --- EFECTOS VISUALES FINALES ---
+        function generateConfetti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            const colors = ['#fde047', '#f97316', '#ef4444', '#3b82f6', '#10b981'];
+            
+            for (let i = 0; i < 40; i++) {
+                const conf = document.createElement('div');
+                conf.className = "absolute w-4 h-4 rounded-sm animate-[confetti_4s_ease-out_forwards]";
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.top = '-10%';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.boxShadow = '0 5px 10px rgba(0,0,0,0.3)';
+                conf.style.animationDelay = (Math.random() * 1.5) + 's';
+                conf.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                container.appendChild(conf);
+            }
+        }
+
+        // --- GENERADOR DE IMAGEN EN CANVAS ---
+        function downloadCard() {
+            if(!selectedObra) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 1080;
+            canvas.height = 1920;
+            const ctx = canvas.getContext('2d');
+
+            const wrapText = (ctx, text, x, y, maxWidth, lineHeight) => {
+                const words = text.split(' ');
+                let line = '';
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && n > 0) {
+                        ctx.fillText(line.trim(), x, y);
+                        line = words[n] + ' ';
+                        y += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                ctx.fillText(line.trim(), x, y);
+                return y + lineHeight; 
+            };
+
+            // Fondo
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, 1920);
+            bgGradient.addColorStop(0, '#fffbeb'); 
+            bgGradient.addColorStop(1, '#ffedd5'); 
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, 1080, 1920);
+
+            // Círculos abstractos
+            ctx.filter = 'blur(80px)';
+            ctx.beginPath(); ctx.arc(150, 300, 400, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(251, 146, 60, 0.4)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(900, 1600, 500, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(244, 63, 94, 0.3)'; ctx.fill();
+            ctx.filter = 'none';
+
+            // Tarjeta central
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.roundRect(80, 120, 920, 1680, 60); ctx.fill();
+            ctx.shadowColor = 'transparent';
+
+            // Borde interno
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.roundRect(110, 150, 860, 1620, 40); ctx.stroke();
+
+            // Textos
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ea580c'; ctx.font = 'bold 35px sans-serif'; ctx.fillText('EL CAMINO A CASA', 540, 260);
+            ctx.fillStyle = '#111827'; ctx.font = 'bold 85px serif'; ctx.fillText('¡Bienvenido a Casa!', 540, 370);
+            ctx.fillStyle = '#d97706'; ctx.font = 'italic 40px serif'; ctx.fillText('La restitución de la dignidad y la vida nueva.', 540, 440);
+
+            // Línea
+            ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(340, 500); ctx.lineTo(740, 500); ctx.stroke();
+
+            // Mensaje
+            ctx.fillStyle = '#6b7280'; ctx.font = 'bold 28px sans-serif'; ctx.fillText('ESTADO DE GRACIA: RESTAURADO', 540, 580);
+            ctx.fillStyle = '#374151'; ctx.font = '38px sans-serif';
+            const mensaje = "Como al salir del Sacramento de la Reconciliación, el Padre te envuelve hoy con un abrazo de amor eterno. Deja que Su infinita gracia y misericordia sanen tu corazón, te sostengan en el camino y te impulsen a ser cada día una mejor persona.";
+            let proximoY = wrapText(ctx, mensaje, 540, 660, 740, 55);
+
+            // Caja Misión
+            const boxY = proximoY + 60;
+            ctx.fillStyle = '#fff7ed';
+            ctx.beginPath(); ctx.roundRect(140, boxY, 800, 480, 40); ctx.fill();
+            ctx.strokeStyle = '#fed7aa'; ctx.lineWidth = 3; ctx.stroke();
+
+            ctx.fillStyle = '#ea580c'; ctx.font = 'bold 30px sans-serif'; ctx.fillText('TU COMPROMISO DE HOY:', 540, boxY + 70);
+
+            ctx.fillStyle = '#1f2937'; ctx.font = 'bold 50px sans-serif';
+            ctx.fillText(`${selectedObra.emoji} ${selectedObra.text}`, 540, boxY + 160);
+            
+            ctx.fillStyle = '#4b5563'; ctx.font = '34px sans-serif';
+            wrapText(ctx, selectedObra.description, 540, boxY + 250, 700, 48);
+
+            // Footer
+            ctx.font = '80px sans-serif'; ctx.fillText('🫂🏠✨', 540, 1600);
+            ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 30px sans-serif';
+            const fechaHoy = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+            ctx.fillText(`Misión aceptada el ${fechaHoy}`, 540, 1680);
+
+            // Descargar
+            try {
+                const dataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'Restauracion-Bienvenido-a-Casa.png';
+                link.href = dataUrl;
+                link.click();
+            } catch (err) {
+                alert("Para descargar la imagen debes abrir el HTML directamente en tu navegador y no en este iframe restringido.");
+            }
+        }
+    </script>
+</body>
+</html>
